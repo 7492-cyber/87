@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Агенты 87: Миссия "Здоровый Выбор"</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Comic Sans MS', 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 900px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, #5bc0f7 0%, #87ceeb 50%, #a8e6cf 100%);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        /* ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== */
+        #loadingScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 50%, #ffa502 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease-out;
+        }
+
+        #loadingScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo-main {
+            animation: logoBounce 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.4));
+        }
+
+        @keyframes logoBounce {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .loading-title {
+            color: white;
+            font-size: 36px;
+            font-weight: 900;
+            margin-top: 30px;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            letter-spacing: 3px;
+            animation: titleWobble 2s ease-in-out infinite;
+            -webkit-text-stroke: 2px rgba(0,0,0,0.2);
+        }
+
+        @keyframes titleWobble {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(-2deg); }
+            75% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        .loading-subtitle {
+            color: rgba(255,255,255,0.95);
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: 700;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        }
+
+        .loading-bar {
+            width: 240px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 4px solid white;
+            border-radius: 4px;
+            margin-top: 30px;
+            overflow: hidden;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #2ed573, #7bed9f);
+            animation: loadProgress 2s ease-out forwards;
+        }
+
+        @keyframes loadProgress {
+            to { width: 100%; }
+        }
+
+        /* ===== ГЛАВНЫЙ ЭКРАН ===== */
+        #gameScreen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #gameScreen.active {
+            display: flex;
+        }
+
+        /* ===== РОБЛОКС ФОН ===== */
+        .roblox-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, #5bc0f7 0%, #87ceeb 60%, #a8e6cf 100%);
+        }
+
+        /* Блочные облака */
+        .block-cloud {
+            position: absolute;
+            background: white;
+            box-shadow: 
+                inset -4px -4px 0 rgba(0,0,0,0.1),
+                inset 4px 4px 0 rgba(255,255,255,0.5),
+                4px 4px 0 rgba(0,0,0,0.2);
+            animation: cloudMove linear infinite;
+        }
+
+        .block-cloud::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 20%;
+            width: 60%;
+            height: 100%;
+            background: white;
+            box-shadow: 
+                inset -4px -4px 0 rgba(0,0,0,0.1),
+                inset 4px 4px 0 rgba(255,255,255,0.5);
+        }
+
+        .block-cloud::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: 50%;
+            width: 40%;
+            height: 80%;
+            background: white;
+            box-shadow: 
+                inset -4px -4px 0 rgba(0,0,0,0.1),
+                inset 4px 4px 0 rgba(255,255,255,0.5);
+        }
+
+        @keyframes cloudMove {
+            from { transform: translateX(500px); }
+            to { transform: translateX(-250px); }
+        }
+
+        /* Блочные здания */
+        .block-buildings {
+            position: absolute;
+            bottom: 150px;
+            width: 200%;
+            height: 200px;
+            animation: buildingsMove 25s linear infinite;
+        }
+
+        @keyframes buildingsMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .block-building {
+            position: absolute;
+            bottom: 0;
+            box-shadow: 
+                inset -6px -6px 0 rgba(0,0,0,0.2),
+                inset 6px 6px 0 rgba(255,255,255,0.2),
+                6px 0 0 rgba(0,0,0,0.15);
+        }
+
+        .block-window {
+            position: absolute;
+            background: #ffeaa7;
+            box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* Блочная земля */
+        .block-ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(180deg, #7bed9f 0%, #2ed573 100%);
+            border-top: 6px solid #26ae60;
+            box-shadow: inset 0 6px 0 rgba(255,255,255,0.3);
+        }
+
+        .block-ground-pattern {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(90deg, 
+                    transparent 0px, 
+                    transparent 48px, 
+                    rgba(0,0,0,0.15) 48px, 
+                    rgba(0,0,0,0.15) 52px);
+            animation: groundMove 2s linear infinite;
+        }
+
+        @keyframes groundMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Блочные деревья */
+        .block-tree {
+            position: absolute;
+            bottom: 150px;
+            width: 40px;
+            height: 80px;
+        }
+
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 30px;
+            background: #8b4513;
+            box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
+        }
+
+        .tree-leaves {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background: #2ed573;
+            box-shadow: 
+                inset -4px -4px 0 rgba(0,0,0,0.2),
+                inset 4px 4px 0 rgba(255,255,255,0.3);
+        }
+
+        /* ===== ПАНЕЛЬ СТАТИСТИКИ ===== */
+        .stats-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 6px solid #2c3e50;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            z-index: 50;
+            position: relative;
+        }
+
+        .score-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: #ffeaa7;
+            padding: 6px 12px;
+            border: 4px solid #2c3e50;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        }
+
+        .score-label {
+            font-size: 10px;
+            color: #2c3e50;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ff4757;
+            line-height: 1;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+        }
+
+        .timer-display {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            background: #ff4757;
+            border: 4px solid #2c3e50;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .timer-svg {
+            position: absolute;
+            transform: rotate(-90deg);
+        }
+
+        .timer-bg {
+            fill: none;
+            stroke: rgba(0,0,0,0.3);
+            stroke-width: 4;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: #2ed573;
+            stroke-width: 4;
+            stroke-linecap: square;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .timer-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: white;
+            z-index: 2;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        }
+
+        .timer-danger {
+            background: #ff4757;
+            animation: timerShake 0.3s ease-in-out infinite;
+        }
+
+        .timer-danger .timer-text {
+            animation: timerPulse 0.5s ease-in-out infinite;
+        }
+
+        .timer-danger .timer-progress {
+            stroke: #ffffff;
+        }
+
+        @keyframes timerShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        @keyframes timerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .best-score {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            background: #7bed9f;
+            padding: 6px 12px;
+            border: 4px solid #2c3e50;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        }
+
+        .best-label {
+            font-size: 10px;
+            color: #2c3e50;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .best-value {
+            font-size: 18px;
+            font-weight: 900;
+            color: #ff4757;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+        }
+
+        /* ===== ИГРОВОЕ ПОЛЕ ===== */
+        .game-field {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== РОБЛОКС ПЕРСОНАЖ ===== */
+        .character {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 160px;
+            z-index: 10;
+            animation: characterJump 0.6s ease-in-out infinite;
+            filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.3));
+        }
+
+        @keyframes characterJump {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-15px); }
+        }
+
+        .character svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .char-arm-left {
+            transform-origin: 30px 75px;
+            animation: armSwingL 0.6s ease-in-out infinite;
+        }
+
+        .char-arm-right {
+            transform-origin: 70px 75px;
+            animation: armSwingR 0.6s ease-in-out infinite;
+        }
+
+        @keyframes armSwingL {
+            0%, 100% { transform: rotate(-20deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        @keyframes armSwingR {
+            0%, 100% { transform: rotate(20deg); }
+            50% { transform: rotate(-20deg); }
+        }
+
+        .char-leg-left {
+            transform-origin: 40px 120px;
+            animation: legSwingL 0.6s ease-in-out infinite;
+        }
+
+        .char-leg-right {
+            transform-origin: 60px 120px;
+            animation: legSwingR 0.6s ease-in-out infinite;
+        }
+
+        @keyframes legSwingL {
+            0%, 100% { transform: rotate(-25deg); }
+            50% { transform: rotate(25deg); }
+        }
+
+        @keyframes legSwingR {
+            0%, 100% { transform: rotate(25deg); }
+            50% { transform: rotate(-25deg); }
+        }
+
+        /* ===== КАРТОЧКА СИТУАЦИИ ===== */
+        .situation-card {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150%);
+            width: 92%;
+            background: white;
+            border: 6px solid #2c3e50;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
+            z-index: 20;
+            animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            overflow: hidden;
+        }
+
+        @keyframes cardSlideIn {
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        .situation-card.hiding {
+            animation: cardSlideOut 0.3s ease-in forwards;
+        }
+
+        @keyframes cardSlideOut {
+            to { 
+                transform: translateX(-50%) translateY(-150%) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+            padding: 12px;
+            border-bottom: 4px solid #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .situation-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 3px solid #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        }
+
+        .situation-text {
+            font-size: 14px;
+            color: white;
+            font-weight: 900;
+            line-height: 1.3;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+            flex: 1;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .choice-btn {
+            padding: 12px 15px;
+            border: 4px solid #2c3e50;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            transition: all 0.15s;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+            font-family: inherit;
+        }
+
+        .choice-btn:nth-child(1) {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+        }
+
+        .choice-btn:nth-child(2) {
+            background: linear-gradient(135deg, #3742fa 0%, #5352ed 100%);
+        }
+
+        .choice-btn:nth-child(3) {
+            background: linear-gradient(135deg, #2ed573 0%, #7bed9f 100%);
+        }
+
+        .choice-btn:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .choice-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .choice-btn.correct {
+            animation: correctPop 0.5s ease-out;
+            border-color: #2ed573;
+        }
+
+        .choice-btn.wrong {
+            animation: wrongShake 0.4s ease-out;
+            border-color: #ff4757;
+        }
+
+        .choice-btn.joke {
+            animation: jokeFlash 1s ease-out;
+        }
+
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes jokeFlash {
+            0%, 100% { background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%); }
+            50% { background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%); }
+        }
+
+        /* ===== ЭФФЕКТЫ ===== */
+        .points-popup {
+            position: absolute;
+            font-size: 36px;
+            font-weight: 900;
+            z-index: 30;
+            pointer-events: none;
+            animation: pointsFloat 1.5s ease-out forwards;
+            -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+            font-family: inherit;
+        }
+
+        @keyframes pointsFloat {
+            0% {
+                transform: translateY(0) scale(0.5) rotate(-10deg);
+                opacity: 0;
+            }
+            20% {
+                transform: translateY(-20px) scale(1.3) rotate(5deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120px) scale(1) rotate(0deg);
+                opacity: 0;
+            }
+        }
+
+        .points-positive {
+            color: #2ed573;
+        }
+
+        .points-negative {
+            color: #ff4757;
+        }
+
+        .points-joke {
+            color: #ffa502;
+        }
+
+        .joke-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffa502;
+            color: white;
+            padding: 15px 25px;
+            border: 4px solid #2c3e50;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            font-size: 16px;
+            font-weight: 900;
+            z-index: 40;
+            text-align: center;
+            animation: jokeMessagePop 2s ease-out forwards;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+        }
+
+        @keyframes jokeMessagePop {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8) rotate(10deg); opacity: 0; }
+        }
+
+        .particle {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            z-index: 25;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .particle-block {
+            animation: particleFly 1.2s ease-out forwards;
+        }
+
+        @keyframes particleFly {
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(1) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== ЭКРАН РЕЗУЛЬТАТОВ ===== */
+        #resultScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 30%, #ffa502 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #resultScreen.active {
+            display: flex;
+            animation: resultFadeIn 0.8s ease-out;
+        }
+
+        @keyframes resultFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .result-logo {
+            width: 110px;
+            height: 110px;
+            margin-bottom: 15px;
+            animation: logoBounce 1.5s ease-in-out infinite;
+            filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.3));
+        }
+
+        .result-title {
+            font-size: 30px;
+            color: white;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            text-align: center;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+        }
+
+        .result-school {
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            padding: 6px 16px;
+            border: 3px solid white;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .result-score-container {
+            background: white;
+            border: 6px solid #2c3e50;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
+            padding: 20px 40px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-score-label {
+            color: #2c3e50;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            font-weight: 900;
+        }
+
+        .result-score {
+            font-size: 68px;
+            color: #ff4757;
+            font-weight: 900;
+            line-height: 1;
+            -webkit-text-stroke: 2px rgba(0,0,0,0.2);
+            animation: scorePop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes scorePop {
+            from { transform: scale(0) rotate(-20deg); opacity: 0; }
+            to { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .result-level {
+            background: #2ed573;
+            color: white;
+            padding: 10px 25px;
+            border: 4px solid #2c3e50;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            font-size: 16px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            animation: levelPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+        }
+
+        .result-level.master {
+            background: #3742fa;
+        }
+
+        .result-level.expert {
+            background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
+        }
+
+        @keyframes levelPop {
+            from { transform: scale(0) rotate(-15deg); opacity: 0; }
+            to { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .result-stats {
+            background: white;
+            border: 6px solid #2c3e50;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .result-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 3px dashed #2c3e50;
+        }
+
+        .result-stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-stat-label {
+            font-size: 13px;
+            color: #2c3e50;
+            font-weight: 800;
+        }
+
+        .result-stat-value {
+            font-size: 18px;
+            font-weight: 900;
+            color: #ff4757;
+            -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+        }
+
+        .share-section {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.2);
+            border: 3px solid white;
+            padding: 12px;
+        }
+
+        .share-text {
+            color: white;
+            font-size: 13px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-weight: 800;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 10px 18px;
+            border: 4px solid #2c3e50;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            color: white;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            font-family: inherit;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        .share-btn-primary {
+            background: #2ed573;
+        }
+
+        .share-btn-secondary {
+            background: #3742fa;
+        }
+
+        .share-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .restart-btn {
+            padding: 14px 35px;
+            background: #ff4757;
+            border: 4px solid #2c3e50;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            font-size: 16px;
+            font-weight: 900;
+            color: white;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: inherit;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .restart-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* ===== УГОЛКОВЫЙ ЛОГОТИП ===== */
+        .corner-logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            z-index: 15;
+            filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
+            animation: cornerLogoBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes cornerLogoBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #2c3e50;
+            color: white;
+            padding: 12px 25px;
+            border: 4px solid white;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            font-size: 13px;
+            font-weight: 800;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-height: 700px) {
+            .character {
+                width: 80px;
+                height: 130px;
+                bottom: 60px;
+            }
+            .situation-text {
+                font-size: 13px;
+            }
+            .choice-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .result-score {
+                font-size: 56px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Загрузочный экран -->
+        <div id="loadingScreen">
+            <svg class="logo-main" width="180" height="180" viewBox="0 0 150 150">
+                <rect x="10" y="10" width="130" height="130" fill="#ffa502" stroke="#2c3e50" stroke-width="6" rx="8"/>
+                <rect x="20" y="20" width="110" height="110" fill="#ff4757" stroke="#2c3e50" stroke-width="4" rx="4"/>
+                <text x="75" y="90" font-size="60" font-weight="900" fill="white" text-anchor="middle" font-family="Arial Black" stroke="#2c3e50" stroke-width="3" paint-order="stroke">87</text>
+                <rect x="25" y="25" width="20" height="20" fill="white" opacity="0.5"/>
+                <rect x="105" y="25" width="20" height="20" fill="white" opacity="0.5"/>
+            </svg>
+            <div class="loading-title">АГЕНТЫ 87</div>
+            <div class="loading-subtitle">Миссия "Здоровый Выбор"</div>
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+
+        <!-- Игровой экран -->
+        <div id="gameScreen">
+            <!-- Роблокс-фон -->
+            <div class="roblox-bg">
+                <div class="block-cloud" style="width: 100px; height: 30px; top: 12%; animation-duration: 35s; animation-delay: 0s;"></div>
+                <div class="block-cloud" style="width: 140px; height: 35px; top: 22%; animation-duration: 45s; animation-delay: -15s;"></div>
+                <div class="block-cloud" style="width: 80px; height: 25px; top: 32%; animation-duration: 40s; animation-delay: -25s;"></div>
+                
+                <div class="block-buildings">
+                    <!-- Здание 1 -->
+                    <div class="block-building" style="left: 0; width: 80px; height: 140px; background: #ff6b81;">
+                        <div class="block-window" style="left: 10px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 60px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 60px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 100px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 100px; width: 20px; height: 20px;"></div>
+                    </div>
+                    <!-- Здание 2 -->
+                    <div class="block-building" style="left: 100px; width: 100px; height: 180px; background: #3742fa;">
+                        <div class="block-window" style="left: 15px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 115px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 115px; width: 25px; height: 25px;"></div>
+                    </div>
+                    <!-- Здание 3 -->
+                    <div class="block-building" style="left: 220px; width: 70px; height: 120px; background: #2ed573;">
+                        <div class="block-window" style="left: 10px; top: 20px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 20px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 10px; top: 55px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 55px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 10px; top: 90px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 90px; width: 18px; height: 18px;"></div>
+                    </div>
+                    <!-- Здание 4 -->
+                    <div class="block-building" style="left: 310px; width: 90px; height: 160px; background: #ffa502;">
+                        <div class="block-window" style="left: 12px; top: 22px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 22px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 12px; top: 62px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 62px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 12px; top: 102px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 102px; width: 22px; height: 22px;"></div>
+                    </div>
+                    <!-- Здание 5 -->
+                    <div class="block-building" style="left: 420px; width: 80px; height: 130px; background: #a55eea;">
+                        <div class="block-window" style="left: 10px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 55px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 55px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 90px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 90px; width: 20px; height: 20px;"></div>
+                    </div>
+                    <!-- Здание 6 -->
+                    <div class="block-building" style="left: 520px; width: 100px; height: 170px; background: #ff4757;">
+                        <div class="block-window" style="left: 15px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 115px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 115px; width: 25px; height: 25px;"></div>
+                    </div>
+                    <!-- Дубликат для бесшовной прокрутки -->
+                    <div class="block-building" style="left: 640px; width: 80px; height: 140px; background: #ff6b81;">
+                        <div class="block-window" style="left: 10px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 20px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 60px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 60px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 10px; top: 100px; width: 20px; height: 20px;"></div>
+                        <div class="block-window" style="left: 50px; top: 100px; width: 20px; height: 20px;"></div>
+                    </div>
+                    <div class="block-building" style="left: 740px; width: 100px; height: 180px; background: #3742fa;">
+                        <div class="block-window" style="left: 15px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 25px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 70px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 15px; top: 115px; width: 25px; height: 25px;"></div>
+                        <div class="block-window" style="left: 60px; top: 115px; width: 25px; height: 25px;"></div>
+                    </div>
+                    <div class="block-building" style="left: 860px; width: 70px; height: 120px; background: #2ed573;">
+                        <div class="block-window" style="left: 10px; top: 20px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 20px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 10px; top: 55px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 55px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 10px; top: 90px; width: 18px; height: 18px;"></div>
+                        <div class="block-window" style="left: 42px; top: 90px; width: 18px; height: 18px;"></div>
+                    </div>
+                    <div class="block-building" style="left: 950px; width: 90px; height: 160px; background: #ffa502;">
+                        <div class="block-window" style="left: 12px; top: 22px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 22px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 12px; top: 62px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 62px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 12px; top: 102px; width: 22px; height: 22px;"></div>
+                        <div class="block-window" style="left: 56px; top: 102px; width: 22px; height: 22px;"></div>
+                    </div>
+                </div>
+
+                <!-- Деревья -->
+                <div class="block-tree" style="left: 10%;">
+                    <div class="tree-leaves"></div>
+                    <div class="tree-trunk"></div>
+                </div>
+                <div class="block-tree" style="left: 75%;">
+                    <div class="tree-leaves"></div>
+                    <div class="tree-trunk"></div>
+                </div>
+                
+                <div class="block-ground">
+                    <div class="block-ground-pattern"></div>
+                </div>
+            </div>
+
+            <!-- Панель статистики -->
+            <div class="stats-panel">
+                <div class="score-display">
+                    <div class="score-label">Очки</div>
+                    <div class="score-value" id="scoreValue">0</div>
+                </div>
+                
+                <div class="timer-display" id="timerDisplay">
+                    <svg class="timer-svg" width="56" height="56" viewBox="0 0 56 56">
+                        <rect class="timer-bg" x="4" y="4" width="48" height="48" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="4"/>
+                        <rect class="timer-progress" id="timerProgress" x="4" y="4" width="48" height="48" fill="none" stroke="#2ed573" stroke-width="4" 
+                              stroke-dasharray="192" stroke-dashoffset="0"/>
+                    </svg>
+                    <div class="timer-text" id="timerText">40</div>
+                </div>
+                
+                <div class="best-score">
+                    <div class="best-label">Рекорд</div>
+                    <div class="best-value" id="bestScore">0</div>
+                </div>
+            </div>
+
+            <!-- Игровое поле -->
+            <div class="game-field" id="gameField">
+                <!-- Роблокс-персонаж -->
+                <div class="character">
+                    <svg viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Тень -->
+                        <ellipse cx="50" cy="155" rx="25" ry="4" fill="rgba(0,0,0,0.3)"/>
+                        
+                        <!-- Левая нога -->
+                        <g class="char-leg-left">
+                            <rect x="32" y="115" width="16" height="35" fill="#2c3e50" stroke="#1a1a1a" stroke-width="2"/>
+                            <rect x="30" y="145" width="20" height="10" fill="#34495e" stroke="#1a1a1a" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- Правая нога -->
+                        <g class="char-leg-right">
+                            <rect x="52" y="115" width="16" height="35" fill="#2c3e50" stroke="#1a1a1a" stroke-width="2"/>
+                            <rect x="50" y="145" width="20" height="10" fill="#34495e" stroke="#1a1a1a" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- Тело -->
+                        <rect x="28" y="65" width="44" height="55" fill="#3742fa" stroke="#1a1a1a" stroke-width="2"/>
+                        <!-- Логотип 87 на теле -->
+                        <rect x="38" y="78" width="24" height="24" fill="white" stroke="#1a1a1a" stroke-width="2"/>
+                        <text x="50" y="96" font-size="16" font-weight="900" fill="#ff4757" text-anchor="middle" font-family="Arial Black">87</text>
+                        
+                        <!-- Левая рука -->
+                        <g class="char-arm-left">
+                            <rect x="14" y="68" width="14" height="40" fill="#3742fa" stroke="#1a1a1a" stroke-width="2"/>
+                            <rect x="14" y="105" width="14" height="10" fill="#ffd8b5" stroke="#1a1a1a" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- Правая рука -->
+                        <g class="char-arm-right">
+                            <rect x="72" y="68" width="14" height="40" fill="#3742fa" stroke="#1a1a1a" stroke-width="2"/>
+                            <rect x="72" y="105" width="14" height="10" fill="#ffd8b5" stroke="#1a1a1a" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- Голова -->
+                        <rect x="25" y="15" width="50" height="50" fill="#ffd8b5" stroke="#1a1a1a" stroke-width="2"/>
+                        
+                        <!-- Волосы -->
+                        <rect x="25" y="15" width="50" height="15" fill="#5d4037" stroke="#1a1a1a" stroke-width="2"/>
+                        <rect x="25" y="15" width="10" height="25" fill="#5d4037" stroke="#1a1a1a" stroke-width="2"/>
+                        <rect x="65" y="15" width="10" height="25" fill="#5d4037" stroke="#1a1a1a" stroke-width="2"/>
+                        
+                        <!-- Глаза -->
+                        <rect x="35" y="35" width="8" height="10" fill="white" stroke="#1a1a1a" stroke-width="1.5"/>
+                        <rect x="57" y="35" width="8" height="10" fill="white" stroke="#1a1a1a" stroke-width="1.5"/>
+                        <rect x="37" y="38" width="4" height="5" fill="#2c3e50"/>
+                        <rect x="59" y="38" width="4" height="5" fill="#2c3e50"/>
+                        <rect x="38" y="39" width="1.5" height="1.5" fill="white"/>
+                        <rect x="60" y="39" width="1.5" height="1.5" fill="white"/>
+                        
+                        <!-- Рот (улыбка) -->
+                        <path d="M 40 52 Q 50 58 60 52" stroke="#2c3e50" stroke-width="2.5" fill="none" stroke-linecap="square"/>
+                        
+                        <!-- Румянец -->
+                        <rect x="30" y="48" width="6" height="3" fill="#ff8a80" opacity="0.6"/>
+                        <rect x="64" y="48" width="6" height="3" fill="#ff8a80" opacity="0.6"/>
+                    </svg>
+                </div>
+
+                <!-- Угловой логотип -->
+                <svg class="corner-logo" viewBox="0 0 150 150">
+                    <rect x="10" y="10" width="130" height="130" fill="#ffa502" stroke="#2c3e50" stroke-width="6" rx="8"/>
+                    <rect x="20" y="20" width="110" height="110" fill="#ff4757" stroke="#2c3e50" stroke-width="4" rx="4"/>
+                    <text x="75" y="90" font-size="60" font-weight="900" fill="white" text-anchor="middle" font-family="Arial Black" stroke="#2c3e50" stroke-width="3" paint-order="stroke">87</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Экран результатов -->
+        <div id="resultScreen">
+            <svg class="result-logo" viewBox="0 0 150 150">
+                <rect x="10" y="10" width="130" height="130" fill="#ffa502" stroke="#2c3e50" stroke-width="6" rx="8"/>
+                <rect x="20" y="20" width="110" height="110" fill="#ff4757" stroke="#2c3e50" stroke-width="4" rx="4"/>
+                <text x="75" y="70" font-size="48" font-weight="900" fill="white" text-anchor="middle" font-family="Arial Black" stroke="#2c3e50" stroke-width="3" paint-order="stroke">87</text>
+                <text x="75" y="100" font-size="14" font-weight="900" fill="white" text-anchor="middle" stroke="#2c3e50" stroke-width="2" paint-order="stroke">МАОУ СОШ</text>
+            </svg>
+            
+            <div class="result-title">МИССИЯ ЗАВЕРШЕНА!</div>
+            <div class="result-school">МАОУ СОШ №87</div>
+            
+            <div class="result-score-container">
+                <div class="result-score-label">Твой результат</div>
+                <div class="result-score" id="finalScore">0</div>
+            </div>
+            
+            <div class="result-level" id="resultLevel">УРОВЕНЬ</div>
+            
+            <div class="result-stats">
+                <div class="result-stat-row">
+                    <span class="result-stat-label">🎯 Правильных ответов</span>
+                    <span class="result-stat-value" id="correctCount">0</span>
+                </div>
+                <div class="result-stat-row">
+                    <span class="result-stat-label">📊 Всего вопросов</span>
+                    <span class="result-stat-value" id="totalCount">0</span>
+                </div>
+                <div class="result-stat-row">
+                    <span class="result-stat-label">🏆 Лучший результат</span>
+                    <span class="result-stat-value" id="finalBest">0</span>
+                </div>
+            </div>
+            
+            <div class="share-section">
+                <div class="share-text">📸 Сделай скриншот и поделись результатом с друзьями!</div>
+                <div class="share-buttons">
+                    <button class="share-btn share-btn-primary" onclick="shareResult()">
+                        📤 Поделиться
+                    </button>
+                    <button class="share-btn share-btn-secondary" onclick="copyResult()">
+                        📋 Копировать
+                    </button>
+                </div>
+            </div>
+            
+            <button class="restart-btn" onclick="restartGame()">🔄 Новая миссия</button>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+        // ===== БАНК ВОПРОСОВ =====
+        const questions = [
+            // === СПЕЦИАЛЬНЫЕ ВОПРОСЫ ШКОЛЫ ===
+            {
+                icon: "👩‍🏫",
+                text: "Как зовут заместителя директора, ответственного за профилактику?",
+                choices: [
+                    { text: "Ирина Валерьевна", points: 150, correct: true },
+                    { text: "Мария Петровна", points: 0, correct: false },
+                    { text: "Не знаю, но попробую угадать", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "🚪",
+                text: "Где найти педагога-психолога?",
+                choices: [
+                    { text: "Кабинет 212", points: 150, correct: true },
+                    { text: "В столовой", points: 0, correct: false },
+                    { text: "На крыше", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "👑",
+                text: "Кто круче?",
+                isJoke: true,
+                choices: [
+                    { text: "Директор", points: 150, correct: true },
+                    { text: "Я", points: 100, correct: false, isJokeChoice: true, jokeMessage: "Правильно — директор! 😉" }
+                ]
+            },
+            // === ЗДОРОВЫЙ ОБРАЗ ЖИЗНИ ===
+            {
+                icon: "⚡",
+                text: "Друг предлагает энергетик перед контрольной",
+                choices: [
+                    { text: "Отказаться и выпить воды", points: 100, correct: true },
+                    { text: "Выпить половину", points: 0, correct: false },
+                    { text: "Выпить весь за компанию", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🌙",
+                text: "Ночь, очень хочется полистать ленту соцсетей",
+                choices: [
+                    { text: "Отложить телефон и лечь спать", points: 100, correct: true },
+                    { text: "Ещё 30 минут", points: 0, correct: false },
+                    { text: "Сидеть до 3 часов ночи", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🍔",
+                text: "В столовой предлагают фастфуд вместо супа",
+                choices: [
+                    { text: "Выбрать суп и салат", points: 100, correct: true },
+                    { text: "Взять фастфуд", points: 0, correct: false },
+                    { text: "Вообще не есть", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🥣",
+                text: "Утром нет времени — решаешь пропустить завтрак",
+                choices: [
+                    { text: "Взять хотя бы яблоко или йогурт", points: 100, correct: true },
+                    { text: "Пойти в школу голодным", points: -50, correct: false },
+                    { text: "Заменить завтрак энергетиком", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "🏃",
+                text: "После уроков: диван с телефоном или прогулка?",
+                choices: [
+                    { text: "3 часа в телефоне на диване", points: -50, correct: false },
+                    { text: "Прогулка в парке с друзьями", points: 100, correct: true },
+                    { text: "Сразу лечь спать днём", points: 0, correct: false }
+                ]
+            },
+            {
+                icon: "💧",
+                text: "На улице жара +30°C. Что пить?",
+                choices: [
+                    { text: "Чистую воду", points: 100, correct: true },
+                    { text: "Сладкую газировку", points: -25, correct: false },
+                    { text: "Холодное пиво из ларька", points: -150, correct: false }
+                ]
+            },
+            // === ВРЕДНЫЕ ПРИВЫЧКИ ===
+            {
+                icon: "💨",
+                text: "На перемене предлагают попробовать вейп",
+                choices: [
+                    { text: "Категорически отказаться", points: 100, correct: true },
+                    { text: "Один раз попробовать", points: -100, correct: false },
+                    { text: "Согласиться, чтобы не выделяться", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "🚬",
+                text: "В туалете школы курят, зовут с собой",
+                choices: [
+                    { text: "Пойти и попробовать", points: -100, correct: false },
+                    { text: "Отказаться и рассказать учителю", points: 100, correct: true },
+                    { text: "Просто постоять рядом", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🍺",
+                text: "На дне рождения предлагают алкоголь",
+                choices: [
+                    { text: "Выпить немного — все так делают", points: -100, correct: false },
+                    { text: "Твёрдо отказаться", points: 100, correct: true },
+                    { text: "Взять, но не пить (для вида)", points: 0, correct: false }
+                ]
+            },
+            {
+                icon: "💊",
+                text: "Предлагают попробовать «безобидные» таблетки на вечеринке",
+                choices: [
+                    { text: "Отказаться и уйти", points: 150, correct: true },
+                    { text: "Попробовать одну — ничего не будет", points: -150, correct: false },
+                    { text: "Взять с собой «на потом»", points: -150, correct: false }
+                ]
+            },
+            {
+                icon: "🎣",
+                text: "Старшеклассник предлагает «легальные» смеси через интернет",
+                choices: [
+                    { text: "Отказаться и сообщить взрослым", points: 150, correct: true },
+                    { text: "Заказать — вдруг поможет учиться", points: -150, correct: false },
+                    { text: "Просто посмотреть сайт", points: -50, correct: false }
+                ]
+            },
+            // === БУЛЛИНГ И ОБЩЕНИЕ ===
+            {
+                icon: "💬",
+                text: "В чате класса травят одноклассника",
+                choices: [
+                    { text: "Промолчать и уйти", points: 0, correct: false },
+                    { text: "Поддержать травлю", points: -100, correct: false },
+                    { text: "Заступиться и сообщить учителю", points: 100, correct: true }
+                ]
+            },
+            {
+                icon: "👊",
+                text: "Кто-то провоцирует драку в школе",
+                choices: [
+                    { text: "Ответить кулаками", points: -100, correct: false },
+                    { text: "Уйти и рассказать учителю", points: 100, correct: true },
+                    { text: "Собрать компанию для ответки", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "🗣️",
+                text: "Тебя просят распространить слух об однокласснике",
+                choices: [
+                    { text: "Рассказать всем", points: -100, correct: false },
+                    { text: "Отказаться и защитить человека", points: 100, correct: true },
+                    { text: "Рассказать только одному другу", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "📱",
+                text: "Предлагают создать фейковый аккаунт, чтобы троллить одноклассника",
+                choices: [
+                    { text: "Согласиться — будет смешно", points: -100, correct: false },
+                    { text: "Отказаться — это кибербуллинг", points: 100, correct: true },
+                    { text: "Просто лайкать посты", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "📸",
+                text: "Предлагают тайком снять кого-то в раздевалке",
+                choices: [
+                    { text: "Согласиться — будет смешно", points: -150, correct: false },
+                    { text: "Категорически отказаться и сообщить", points: 150, correct: true },
+                    { text: "Просто посмотреть", points: -75, correct: false }
+                ]
+            },
+            // === УЧЁБА И ПОВЕДЕНИЕ ===
+            {
+                icon: "🎒",
+                text: "Прогулы: друзья зовут гулять вместо уроков",
+                choices: [
+                    { text: "Пойти гулять, уроки не важны", points: -100, correct: false },
+                    { text: "Остаться на уроках", points: 100, correct: true },
+                    { text: "Пойти на один урок, потом сбежать", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "📝",
+                text: "Одноклассник просит списать домашку",
+                choices: [
+                    { text: "Дать списать без слов", points: 0, correct: false },
+                    { text: "Отказать и предложить объяснить тему", points: 100, correct: true },
+                    { text: "Проигнорировать", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "🎮",
+                text: "После школы все идут в компьютерный клуб",
+                choices: [
+                    { text: "Пойти и просидеть там до ночи", points: -50, correct: false },
+                    { text: "Пойти в спортзал или на секцию", points: 100, correct: true },
+                    { text: "Пойти на час, потом уйти", points: 0, correct: false }
+                ]
+            },
+            // === ОПАСНОЕ ПОВЕДЕНИЕ ===
+            {
+                icon: "🚂",
+                text: "Кто-то предлагает залезть на крышу поезда (зацепинг)",
+                choices: [
+                    { text: "Пойти за компанией — это круто", points: -150, correct: false },
+                    { text: "Категорически отказаться и предупредить взрослых", points: 150, correct: true },
+                    { text: "Просто посмотреть со стороны", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🎨",
+                text: "Друзья предлагают расписать стену школы граффити",
+                choices: [
+                    { text: "Отказаться — это порча имущества", points: 100, correct: true },
+                    { text: "Пойти и тоже поучаствовать", points: -100, correct: false },
+                    { text: "Постоять рядом и посмотреть", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🪑",
+                text: "Видишь, как кто-то ломает парту в классе",
+                choices: [
+                    { text: "Присоединиться", points: -100, correct: false },
+                    { text: "Остановить и сообщить учителю", points: 100, correct: true },
+                    { text: "Пройти мимо", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "📸",
+                text: "Предлагают снять опасный челлендж для TikTok",
+                choices: [
+                    { text: "Согласиться ради лайков", points: -100, correct: false },
+                    { text: "Отказаться — это опасно для жизни", points: 100, correct: true },
+                    { text: "Предложить более безопасный вариант", points: 50, correct: true }
+                ]
+            },
+            {
+                icon: "🏗️",
+                text: "Друзья зовут погулять по стройке рядом со школой",
+                choices: [
+                    { text: "Пойти — там интересно", points: -100, correct: false },
+                    { text: "Отказаться — это опасно и запрещено", points: 100, correct: true },
+                    { text: "Пойти только на 5 минут", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "🛤️",
+                text: "Чтобы сократить путь, предлагают перейти ж/д пути в неположенном месте",
+                choices: [
+                    { text: "Пойти через пути — так быстрее", points: -100, correct: false },
+                    { text: "Идти только по переходу", points: 100, correct: true },
+                    { text: "Перебежать, когда поезда не видно", points: -100, correct: false }
+                ]
+            },
+            // === ИНТЕРНЕТ И БЕЗОПАСНОСТЬ ===
+            {
+                icon: "🎰",
+                text: "Предлагают сделать ставку в азартной игре онлайн",
+                choices: [
+                    { text: "Попробовать — вдруг повезёт", points: -100, correct: false },
+                    { text: "Отказаться — это зависимость", points: 100, correct: true },
+                    { text: "Посмотреть, как играют другие", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "🕸️",
+                text: "В интернете незнакомый взрослый просит встретиться",
+                choices: [
+                    { text: "Пойти — он кажется милым", points: -150, correct: false },
+                    { text: "Рассказать родителям и заблокировать", points: 150, correct: true },
+                    { text: "Пойти, но с другом", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "🔞",
+                text: "Друзья скидывают ссылку на сайт с контентом 18+",
+                choices: [
+                    { text: "Открыть и посмотреть", points: -100, correct: false },
+                    { text: "Удалить и сообщить взрослым", points: 100, correct: true },
+                    { text: "Переслать ещё кому-то", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "💸",
+                text: "В игре предлагают «инвестицию» с гарантированным возвратом",
+                choices: [
+                    { text: "Вложить карманные деньги", points: -100, correct: false },
+                    { text: "Отказаться — это мошенничество", points: 100, correct: true },
+                    { text: "Вложить немного, для проверки", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "📢",
+                text: "В соцсетях предлагают вступить в экстремистскую группу",
+                choices: [
+                    { text: "Вступить — интересно почитать", points: -150, correct: false },
+                    { text: "Заблокировать и сообщить", points: 150, correct: true },
+                    { text: "Просто подписаться", points: -100, correct: false }
+                ]
+            },
+            // === ЭМОЦИИ И САМОПОМОЩЬ ===
+            {
+                icon: "😢",
+                text: "Тебе очень грустно и одиноко уже несколько дней",
+                choices: [
+                    { text: "Поговорить с психологом (каб. 212)", points: 150, correct: true },
+                    { text: "Закрыться в комнате и молчать", points: -50, correct: false },
+                    { text: "Написать незнакомцам в интернет", points: -50, correct: false }
+                ]
+            },
+            {
+                icon: "💔",
+                text: "Друг признался, что думает о самоповреждении",
+                choices: [
+                    { text: "Пообещать никому не говорить", points: -50, correct: false },
+                    { text: "Вместе пойти к психологу", points: 150, correct: true },
+                    { text: "Посмеяться — он шутит", points: -100, correct: false }
+                ]
+            },
+            {
+                icon: "😰",
+                text: "Перед контрольной сильная тревога",
+                choices: [
+                    { text: "Подышать и вспомнить материал", points: 100, correct: true },
+                    { text: "Выпить успокоительное без назначения", points: -100, correct: false },
+                    { text: "Прогулять урок", points: -50, correct: false }
+                ]
+            },
+            // === ОТНОШЕНИЯ ===
+            {
+                icon: "❤️",
+                text: "Друг требует пароль от соцсетей «в знак доверия»",
+                choices: [
+                    { text: "Дать — раз любит", points: -100, correct: false },
+                    { text: "Отказать — это личные границы", points: 100, correct: true },
+                    { text: "Дать фейковый пароль", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "📵",
+                text: "Друг запрещает общаться с другими друзьями",
+                choices: [
+                    { text: "Подчиниться — лишь бы не ссориться", points: -100, correct: false },
+                    { text: "Поговорить с родителями/психологом", points: 150, correct: true },
+                    { text: "Общаться тайком", points: -50, correct: false }
+                ]
+            },
+            // === ДОПОЛНИТЕЛЬНЫЕ ===
+            {
+                icon: "🎤",
+                text: "В компании начинают оскорблять национальность одноклассника",
+                choices: [
+                    { text: "Поддержать — за компанию", points: -150, correct: false },
+                    { text: "Остановить и защитить человека", points: 150, correct: true },
+                    { text: "Молча уйти", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "🎁",
+                text: "Нашёл в школе чужой телефон",
+                choices: [
+                    { text: "Оставить себе", points: -100, correct: false },
+                    { text: "Отнести учителю или на вахту", points: 100, correct: true },
+                    { text: "Продать через интернет", points: -150, correct: false }
+                ]
+            },
+            {
+                icon: "🤥",
+                text: "Родители спрашивают, где ты был — ты опоздал",
+                choices: [
+                    { text: "Сказать правду", points: 100, correct: true },
+                    { text: "Придумать историю", points: -50, correct: false },
+                    { text: "Сделать вид, что ничего не было", points: -25, correct: false }
+                ]
+            },
+            {
+                icon: "🎭",
+                text: "Друзья уговаривают соврать учителю за их проступок",
+                choices: [
+                    { text: "Соврать — друзья же", points: -100, correct: false },
+                    { text: "Отказаться — ложь не решение", points: 100, correct: true },
+                    { text: "Соврать, но частично", points: -50, correct: false }
+                ]
+            }
+        ];
+
+        // ===== СОСТОЯНИЕ ИГРЫ =====
+        let gameState = {
+            score: 0,
+            currentQuestion: 0,
+            correctAnswers: 0,
+            totalAnswered: 0,
+            timeLeft: 40,
+            maxTime: 40,
+            timerInterval: null,
+            questionsQueue: [],
+            bestScore: parseInt(localStorage.getItem('agents87_bestScore_v2') || '0'),
+            isGameActive: false
+        };
+
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        window.addEventListener('load', () => {
+            document.getElementById('bestScore').textContent = gameState.bestScore;
+            
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.add('active');
+                setTimeout(() => startGame(), 500);
+            }, 2500);
+        });
+
+        // ===== ЛОГИКА ИГРЫ =====
+        function startGame() {
+            // Перемешиваем вопросы и берём 15
+            gameState.questionsQueue = shuffleArray([...questions]).slice(0, 15);
+            gameState.score = 0;
+            gameState.currentQuestion = 0;
+            gameState.correctAnswers = 0;
+            gameState.totalAnswered = 0;
+            gameState.timeLeft = 40;
+            gameState.isGameActive = true;
+            
+            updateScoreDisplay();
+            updateTimerDisplay();
+            startTimer();
+            showNextQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimerDisplay();
+                
+                if (gameState.timeLeft <= 10) {
+                    document.getElementById('timerDisplay').classList.add('timer-danger');
+                }
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const progress = document.getElementById('timerProgress');
+            const text = document.getElementById('timerText');
+            const circumference = 192;
+            const offset = circumference * (1 - gameState.timeLeft / gameState.maxTime);
+            
+            progress.style.strokeDashoffset = offset;
+            text.textContent = gameState.timeLeft;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('scoreValue').textContent = gameState.score;
+        }
+
+        function showNextQuestion() {
+            if (gameState.currentQuestion >= gameState.questionsQueue.length || !gameState.isGameActive) {
+                endGame();
+                return;
+            }
+
+            const question = gameState.questionsQueue[gameState.currentQuestion];
+            const gameField = document.getElementById('gameField');
+            
+            const card = document.createElement('div');
+            card.className = 'situation-card';
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="situation-icon">${question.icon}</div>
+                    <div class="situation-text">${question.text}</div>
+                </div>
+                <div class="choices">
+                    ${question.choices.map((choice, index) => 
+                        `<button class="choice-btn" onclick="makeChoice(${index}, this)">${choice.text}</button>`
+                    ).join('')}
+                </div>
+            `;
+            
+            gameField.appendChild(card);
+        }
+
+        function makeChoice(choiceIndex, buttonElement) {
+            if (!gameState.isGameActive) return;
+            
+            const question = gameState.questionsQueue[gameState.currentQuestion];
+            const choice = question.choices[choiceIndex];
+            
+            // Блокируем все кнопки
+            const allButtons = document.querySelectorAll('.choice-btn');
+            allButtons.forEach(btn => btn.disabled = true);
+            
+            // Обработка "пасхалки" с вопросом "Кто круче?"
+            if (choice.isJokeChoice) {
+                buttonElement.classList.add('joke');
+                showJokeMessage(choice.jokeMessage || "Правильно — директор!");
+                showPointsPopup(`+${choice.points}`, 'joke');
+                createParticles('#ffa502');
+                gameState.score += choice.points;
+                gameState.correctAnswers++;
+                gameState.totalAnswered++;
+                // Бонусное время
+                gameState.timeLeft = Math.min(gameState.maxTime, gameState.timeLeft + 3);
+            } else {
+                // Обычная обработка
+                if (choice.correct) {
+                    buttonElement.classList.add('correct');
+                    createParticles('#2ed573');
+                    showPointsPopup(`+${choice.points}`, 'positive');
+                    gameState.correctAnswers++;
+                    gameState.timeLeft = Math.min(gameState.maxTime, gameState.timeLeft + 3);
+                } else {
+                    buttonElement.classList.add('wrong');
+                    createParticles('#ff4757');
+                    if (choice.points < 0) {
+                        showPointsPopup(`${choice.points}`, 'negative');
+                    } else {
+                        showPointsPopup('0', 'negative');
+                    }
+                }
+                
+                gameState.score = Math.max(0, gameState.score + choice.points);
+                gameState.totalAnswered++;
+            }
+            
+            updateScoreDisplay();
+            
+            // Переход к следующему вопросу
+            setTimeout(() => {
+                const card = document.querySelector('.situation-card');
+                if (card) {
+                    card.classList.add('hiding');
+                    setTimeout(() => {
+                        card.remove();
+                        gameState.currentQuestion++;
+                        showNextQuestion();
+                    }, 300);
+                }
+            }, question.isJoke ? 2000 : 800);
+        }
+
+        function showPointsPopup(text, type) {
+            const popup = document.createElement('div');
+            popup.className = `points-popup points-${type}`;
+            popup.textContent = text;
+            popup.style.left = '50%';
+            popup.style.top = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            document.getElementById('gameField').appendChild(popup);
+            
+            setTimeout(() => popup.remove(), 1500);
+        }
+
+        function showJokeMessage(message) {
+            const jokeMsg = document.createElement('div');
+            jokeMsg.className = 'joke-message';
+            jokeMsg.textContent = message;
+            document.getElementById('gameField').appendChild(jokeMsg);
+            
+            setTimeout(() => jokeMsg.remove(), 2000);
+        }
+
+        function createParticles(color) {
+            const gameField = document.getElementById('gameField');
+            const centerX = gameField.offsetWidth / 2;
+            const centerY = gameField.offsetHeight / 2;
+            
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle particle-block';
+                particle.style.background = color;
+                particle.style.border = '2px solid #2c3e50';
+                
+                const angle = (Math.PI * 2 * i) / 10;
+                const distance = 80 + Math.random() * 60;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                gameField.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1200);
+            }
+        }
+
+        function endGame() {
+            gameState.isGameActive = false;
+            clearInterval(gameState.timerInterval);
+            
+            // Сохраняем рекорд
+            if (gameState.score > gameState.bestScore) {
+                gameState.bestScore = gameState.score;
+                localStorage.setItem('agents87_bestScore_v2', gameState.bestScore.toString());
+            }
+            
+            // Показываем экран результатов
+            setTimeout(() => {
+                document.getElementById('gameScreen').classList.remove('active');
+                document.getElementById('resultScreen').classList.add('active');
+                
+                document.getElementById('finalScore').textContent = gameState.score;
+                document.getElementById('correctCount').textContent = gameState.correctAnswers;
+                document.getElementById('totalCount').textContent = gameState.totalAnswered;
+                document.getElementById('finalBest').textContent = gameState.bestScore;
+                
+                // Определяем уровень
+                const levelEl = document.getElementById('resultLevel');
+                levelEl.classList.remove('master', 'expert');
+                let level = 'НОВИЧОК ПРОФИЛАКТИКИ';
+                if (gameState.score >= 1000) {
+                    level = 'ЭКСПЕРТ ПРОФИЛАКТИКИ 🏆';
+                    levelEl.classList.add('expert');
+                } else if (gameState.score >= 500) {
+                    level = 'МАСТЕР ПРОФИЛАКТИКИ ⭐';
+                    levelEl.classList.add('master');
+                }
+                levelEl.textContent = level;
+            }, 500);
+        }
+
+        function restartGame() {
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('timerDisplay').classList.remove('timer-danger');
+            document.getElementById('bestScore').textContent = gameState.bestScore;
+            
+            setTimeout(() => startGame(), 300);
+        }
+
+        // ===== ФУНКЦИИ "ПОДЕЛИТЬСЯ" =====
+        function getShareText() {
+            let level = 'Новичок профилактики';
+            if (gameState.score >= 1000) level = 'Эксперт профилактики 🏆';
+            else if (gameState.score >= 500) level = 'Мастер профилактики ⭐';
+            
+            return `🎮 Агенты 87: Миссия "Здоровый Выбор"\n🏫 МАОУ СОШ №87\n\n🏆 Мой результат: ${gameState.score} очков\n${level}\n✅ Правильных ответов: ${gameState.correctAnswers}/${gameState.totalAnswered}\n\nСможешь меня обойти?`;
+        }
+
+        function shareResult() {
+            const text = getShareText();
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Агенты 87: Миссия "Здоровый Выбор"',
+                    text: text
+                }).catch(() => {
+                    copyToClipboard(text);
+                });
+            } else {
+                copyToClipboard(text);
+                showToast('📸 Сделай скриншот и отправь друзьям!');
+            }
+        }
+
+        function copyResult() {
+            const text = getShareText();
+            copyToClipboard(text);
+            showToast('✅ Текст скопирован! Сделай скрин и отправь друзьям');
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (e) {
+                console.error('Copy failed', e);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
